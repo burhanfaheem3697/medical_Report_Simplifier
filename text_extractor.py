@@ -6,22 +6,15 @@ from PIL import Image
 
 pytesseract.pytesseract.tesseract_cmd = r"C:/Program Files/Tesseract-OCR/tesseract.exe"
 
-async def extract_text_from_image(
-    image_file: Annotated[UploadFile, File(description="An image of a medical report.")]
-):
+def extract_text_from_image(file_contents: bytes) -> str:
     """
-    Receives an image, performs OCR using Tesseract, and returns the extracted text.
+    Performs OCR on the given image bytes using Tesseract.
+    Raises errors if the file is not a valid image or if Tesseract fails.
     """
-    file_contents = await image_file.read()
-    try:
-        image = Image.open(io.BytesIO(file_contents))
-    except Exception as e:
-        return {"error": f"Failed to open image: {e}"}
-    try:
-        extracted_text = pytesseract.image_to_string(image)
-        return {
-            "filename": image_file.filename,
-            "text": extracted_text
-        }
-    except Exception as e:
-        return {"error": f"Failed during OCR processing: {e}"}
+    # This line will raise an UnidentifiedImageError if the file is not a valid image.
+    image = Image.open(io.BytesIO(file_contents))
+    
+    # This line will raise an error if Tesseract is not configured correctly.
+    extracted_text = pytesseract.image_to_string(image)
+    
+    return extracted_text
