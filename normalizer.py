@@ -1,5 +1,4 @@
 from fastapi import FastAPI, HTTPException
-from schemas import DetailedReport
 from typing import List, Dict, Any
 
 
@@ -8,15 +7,15 @@ from typing import List, Dict, Any
 # This function only runs if the Pydantic validation above succeeds.
 def normalize_json(validated_data):
     normalized_tests = []
-    for result in validated_data.report.results:
+    for result in validated_data.results:
         if result.value is not None:
             normalized_tests.append({
-                "name": result.parameter,
+                "parameter": result.parameter,
                 "value": result.value,
                 "unit": result.unit,
-                "status": result.flag,
-                "ref_range": result.reference_range
+                "reference_range": result.reference_range,
+                "status": result.status
             })
-    return {"tests": normalized_tests, "normalization_confidence": 0.95}
+    return {"results": normalized_tests, "normalization_confidence": 0.95}
 
 

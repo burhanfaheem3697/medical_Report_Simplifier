@@ -1,8 +1,8 @@
 # process_report.py
 import os
-from groq import Groq
+from groq import AsyncGroq
 from dotenv import load_dotenv
-
+import json
 # Load environment variables from .env file
 load_dotenv()
 
@@ -14,8 +14,28 @@ async def get_structured_report(raw_text):
     client = AsyncGroq()
     
     system_prompt = """
-    You are an expert data extraction AI. Your task is to analyze the provided raw text from a medical lab report and convert it into a structured JSON object.
-    The JSON object must contain 'patient', 'sample', 'lab', 'results', and 'interpretation'. The 'results' key must be a list of objects, each with 'parameter', 'value', 'unit', 'reference_range', and 'flag' keys.
+    You are a precision data extraction AI. Your task is to analyze raw text from a medical lab report and convert it into a structured JSON object.
+
+    The JSON object must contain 'patient', 'sample', 'lab', 'results', and 'interpretation'. 
+    The 'results' key must be a list of objects, each with 'parameter', 'value', 'unit', 'reference_range', and 'status' keys.
+
+    **CRITICAL INSTRUCTION:** The 'reference_range' key MUST be a JSON object.
+    - For a range like "13.0-17.0", the object should be { "low": 13.0, "high": 17.0 }.
+    - For a range like "<50", the object should be { "high": 50 }.
+    - For a range like ">4000", the object should be { "low": 4000 }.
+
+    For example, the text "Hemoglobin: 12.5 g/dL (Ref: 13.0-17.0) LOW" must be converted to:
+    {
+    "parameter": "Hemoglobin",
+    "value": 12.5,
+    "unit": "g/dL",
+    "reference_range": {
+        "low": 13.0,
+        "high": 17.0
+    },
+    "status": "Low"
+    }
+
     Respond ONLY with the valid JSON object. Do not include any other text, explanations, or markdown formatting.
     """
     
@@ -25,7 +45,7 @@ async def get_structured_report(raw_text):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": f"Here is the medical report text:\n\n{raw_text}"},
         ],
-        model="llama3-8b-8192",
+        model="openai/gpt-oss-120b",
         response_format={"type": "json_object"},
         temperature=0.0,
     )

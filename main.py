@@ -1,16 +1,29 @@
 # main.py
 import pytesseract
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File,HTTPException,Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from typing import Annotated
 from text_extractor import extract_text_from_image
 from process_report import get_structured_report
 from normalizer import normalize_json
-from schemas import DetailedReport,OcrOutput
+from schemas import OcrOutput,Report,StructuredReport
+from summarizer import get_patient_summary
 import uvicorn
 app = FastAPI(
     title="Medical Report OCR Service",
     description="Extracts text from a medical report image."
 )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    # ADD THIS LINE to see the detailed error in your terminal
+    print(f"Caught a validation error: {exc.errors()}")
+    
+    return JSONResponse(
+        status_code=422,
+        content={"message": "An error occurred with your input.", "details": exc.errors()},
+    )
 
 
 @app.get('/')
@@ -62,6 +75,7 @@ async def structured_report(request: OcrOutput):
     try:
         # Call the service to perform the main task
         structured_data = await get_structured_report(request.text)
+        print("printing structured data",structured_data)
         return structured_data  
     except Exception as e:
         # Catch any error from the service and return a clean HTTP error response
@@ -72,17 +86,33 @@ async def structured_report(request: OcrOutput):
         )
 
 @app.post("/normalize")
-async def normalize_report(detailed_report: DetailedReport):
+async def normalize_report(structured_report : Report):
     """
     Receives a detailed report, which is automatically validated by FastAPI/Pydantic.
     If validation passes, it proceeds to normalize it.
     """
     try:
-        normalized_data = normalize_json(detailed_report)
+        normalized_data = normalize_json(structured_report)
         return normalized_data
     except Exception as e:
         # This will catch errors in your normalization logic
         raise HTTPException(status_code=500, detail=f"Error during normalization: {str(e)}")
+
+@app.post("/summarize-report")
+async def summarize_report_endpoint(request: Report):
+    """
+    Receives normalized test data and returns a patient-friendly summary.
+    """
+    try:
+        summary = await get_patient_summary(request)
+        return summary
+    except Exception as e:
+        print(f"An error occurred during summarization: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while generating the summary."
+        )
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
