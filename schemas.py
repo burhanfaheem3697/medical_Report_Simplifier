@@ -6,7 +6,6 @@ class ResultItem(BaseModel):
     value: float | None
     unit: str | None
     reference_range: Dict[str, Any] | None
-    status: str | None
 
 class Report(BaseModel):
     results: List[ResultItem]

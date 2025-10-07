@@ -99,18 +99,20 @@ async def normalize_report(structured_report : Report):
         raise HTTPException(status_code=500, detail=f"Error during normalization: {str(e)}")
 
 @app.post("/summarize-report")
-async def summarize_report_endpoint(request: Report):
+async def summarize_report_endpoint(request : Report):
     """
-    Receives normalized test data and returns a patient-friendly summary.
+    Receives a full structured report and returns a patient-friendly summary.
+    This endpoint delegates the task of identifying what's important to the LLM.
     """
     try:
-        summary = await get_patient_summary(request)
-        return summary
+        # Call the single, unified summarization service
+        summary_data = await get_patient_summary(request)
+        return summary_data
     except Exception as e:
         print(f"An error occurred during summarization: {e}")
         raise HTTPException(
             status_code=500,
-            detail="An error occurred while generating the summary."
+            detail=f"An error occurred while generating the summary: {str(e)}"
         )
 
 

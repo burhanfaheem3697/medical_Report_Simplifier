@@ -16,11 +16,11 @@ async def get_structured_report(raw_text):
     system_prompt = """
     You are a precision data extraction AI. Your task is to analyze raw text from a medical lab report and convert it into a structured JSON object.
 
-    The JSON object must contain 'patient', 'sample', 'lab', 'results', and 'interpretation'. 
-    The 'results' key must be a list of objects, each with 'parameter', 'value', 'unit', 'reference_range', and 'status' keys.
+    The JSON object must contain 'patient', 'sample', 'lab', 'results'. 
+    The 'results' key must be a list of objects, each with 'parameter', 'value', 'unit', 'reference_range'.
 
     **CRITICAL INSTRUCTION:** The 'reference_range' key MUST be a JSON object.
-    - For a range like "13.0-17.0", the object should be { "low": 13.0, "high": 17.0 }.
+    - For a range like "13.0-17.0", the object should be { "low": 13.0, "high": 17.0 }. 
     - For a range like "<50", the object should be { "high": 50 }.
     - For a range like ">4000", the object should be { "low": 4000 }.
 
@@ -32,8 +32,7 @@ async def get_structured_report(raw_text):
     "reference_range": {
         "low": 13.0,
         "high": 17.0
-    },
-    "status": "Low"
+    }
     }
 
     Respond ONLY with the valid JSON object. Do not include any other text, explanations, or markdown formatting.

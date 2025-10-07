@@ -14,7 +14,6 @@ def normalize_json(validated_data):
                 "value": result.value,
                 "unit": result.unit,
                 "reference_range": result.reference_range,
-                "status": result.status
             })
     return {"results": normalized_tests, "normalization_confidence": 0.95}
 
