@@ -161,11 +161,7 @@ medicalReportSimplifier/
 
 ---
 
-## 📝 License
 
-MIT License
-
----
 
 ## 💡 Contributing
 
